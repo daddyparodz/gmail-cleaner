@@ -39,19 +39,32 @@ A **free**, privacy-focused tool to bulk unsubscribe from emails, delete emails 
 2. Create a new project (or select existing)
 3. Search for **"Gmail API"** and **Enable** it
 4. Go to **APIs & Services** → **OAuth consent screen**
-   - Choose **External**
+   - Choose **External** → Click **Create**
    - Fill in App name: "Gmail Cleanup" (or anything)
-   - Add your email as **Test user**
-5. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
+   - Add your email in **User support email**
+   - Add your email in **Developer contact email**
+   - Click **Save and Continue** (skip Scopes)
+   - Click **Save and Continue** (skip optional info)
+5. Still in OAuth consent screen → **Test users** → **Add Users**
+   - Add your Gmail address → **Save**
+6. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
    - Application type: **Desktop app**
-   - Download the JSON file
-   - Rename to `credentials.json`
+   - Click **Create**
+   - Click **Download JSON**
+   - Rename the downloaded file to `credentials.json`
+
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/Gururagavendra/gmail-cleaner.git
+cd gmail-cleaner
+```
+
+Put your `credentials.json` file in the project folder.
 
 ## Usage
 
 ### Option A: Docker (Recommended)
-
-Download the `docker-compose.yml` file into a folder, and put your `credentials.json` inside it too. Then run:
 
 ```bash
 docker compose up -d
@@ -61,21 +74,18 @@ Open http://localhost:8766 in your browser.
 
 **First-time sign-in:** Click "Sign In" in the web UI, then check logs for the OAuth URL:
 ```bash
-docker logs cleanup_email-gmail-cleaner-1
+docker logs $(docker ps -q --filter ancestor=ghcr.io/gururagavendra/gmail-cleaner)
+```
+Or if you built locally:
+```bash
+docker logs $(docker ps -q --filter name=gmail-cleaner)
 ```
 
 Copy the URL from logs, open in browser, and authorize.
 
+> ⚠️ You'll see "Google hasn't verified this app" - this is normal! Click **Advanced** → **Go to Gmail Cleanup (unsafe)** to continue.
+
 ### Option B: Python (with uv)
-
-Clone the repository:
-
-```bash
-git clone https://github.com/Gururagavendra/gmail-cleaner.git
-cd gmail-cleaner
-```
-
-Put your `credentials.json` file in the project folder.
 
 ```bash
 uv sync
@@ -130,9 +140,17 @@ This error means you're missing a step in the OAuth setup:
 
 Check the container logs:
 ```bash
-docker logs cleanup_email-gmail-cleaner-1
+docker logs $(docker ps -q --filter name=gmail-cleaner)
 ```
 Look for a URL starting with `https://accounts.google.com/o/oauth2/...`
+
+### "Google hasn't verified this app" warning
+
+This is normal for personal OAuth apps! Click:
+1. **Advanced** (small link at bottom)
+2. **Go to Gmail Cleanup (unsafe)**
+
+This warning appears because your app isn't published to Google - which is exactly what we want for privacy!
 
 ## Contributing
 
