@@ -26,7 +26,7 @@ A **free**, privacy-focused tool to bulk unsubscribe from emails, delete emails 
 
 ![Gmail Cleaner Demo](demo.gif)
 
-*Filter by age/size/category → Scan senders → Select → Delete thousands of emails in seconds!*
+*Filter by days/size-of-email/category → Scan senders → Select → Delete thousands of emails in seconds!*
 
 ## Setup
 
