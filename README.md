@@ -155,7 +155,8 @@ This warning appears because your app isn't published to Google - which is exact
 
 ## Contributing
 
-PRs welcome! Feel free to:
+PRs welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
+
 - Report bugs
 - Suggest features
 - Improve the UI
