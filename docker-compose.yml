@@ -1,6 +1,8 @@
 services:
   gmail-cleaner:
-    image: ghcr.io/Gururagavendra/gmail-cleaner:latest
+    image: ghcr.io/gururagavendra/gmail-cleaner:latest
+    # Option 2: Build locally (uncomment below, comment out image above)
+    # build: .
     ports:
       - "8766:8766"  # Web UI
       - "8767:8767"  # OAuth callback
