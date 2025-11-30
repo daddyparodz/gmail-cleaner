@@ -47,18 +47,11 @@ A **free**, privacy-focused tool to bulk unsubscribe from emails, delete emails 
    - Download the JSON file
    - Rename to `credentials.json`
 
-### 2. Clone the Repository
-
-```bash
-git clone https://github.com/Gururagavendra/gmail-cleaner.git
-cd gmail-cleaner
-```
-
-Put your `credentials.json` file in the project folder.
-
 ## Usage
 
 ### Option A: Docker (Recommended)
+
+Download the `docker-compose.yml` file into a folder, and put your `credentials.json` inside it too. Then run:
 
 ```bash
 docker compose up -d
@@ -74,6 +67,15 @@ docker logs cleanup_email-gmail-cleaner-1
 Copy the URL from logs, open in browser, and authorize.
 
 ### Option B: Python (with uv)
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Gururagavendra/gmail-cleaner.git
+cd gmail-cleaner
+```
+
+Put your `credentials.json` file in the project folder.
 
 ```bash
 uv sync

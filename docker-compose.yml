@@ -1,6 +1,6 @@
 services:
   gmail-cleaner:
-    build: .
+    image: ghcr.io/Gururagavendra/gmail-cleaner:latest
     ports:
       - "8766:8766"  # Web UI
       - "8767:8767"  # OAuth callback
