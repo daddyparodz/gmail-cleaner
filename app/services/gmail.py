@@ -8,11 +8,49 @@ import re
 import time
 import urllib.request
 import ssl
+import socket
+import ipaddress
+from urllib.parse import urlparse
 from collections import defaultdict
 from typing import Optional, Union, Any
 
 from app.core import state
 from app.services.auth import get_gmail_service
+
+
+# ----- Security Helpers -----
+
+def _validate_unsafe_url(url: str) -> str:
+    """
+    Validate URL to prevent SSRF.
+    Checks scheme and resolves hostname to ensure it's not a local/private IP.
+    """
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        raise ValueError("Invalid URL format")
+    
+    if parsed.scheme not in ('http', 'https'):
+        raise ValueError("Invalid URL scheme. Only HTTP and HTTPS are allowed.")
+    
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Invalid URL: No hostname found.")
+    
+    # Resolve hostname to IP
+    try:
+        ip_str = socket.gethostbyname(hostname)
+        ip = ipaddress.ip_address(ip_str)
+    except socket.gaierror:
+        raise ValueError(f"Could not resolve hostname: {hostname}")
+    except ValueError:
+        raise ValueError(f"Invalid IP address resolved: {ip_str}")
+
+    # Check for restricted IP ranges
+    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_unspecified:
+         raise ValueError(f"Blocked restricted IP: {ip_str}")
+         
+    return url
 
 
 # ----- Filters -----
@@ -248,10 +286,14 @@ def unsubscribe_single(domain: str, link: str) -> dict:
         }
     
     try:
-        # Create SSL context that doesn't verify (some unsubscribe servers have bad certs)
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        # Validate URL for SSRF (Check scheme and block private/loopback IPs)
+        try:
+            link = _validate_unsafe_url(link)
+        except ValueError as e:
+            return {"success": False, "message": f"Security Error: {str(e)}"}
+
+        # Create Default SSL context (Verifies certs by default)
+        # We removed the custom context that disabled verification.
         
         # Try POST first (one-click), then GET
         req = urllib.request.Request(
@@ -265,7 +307,7 @@ def unsubscribe_single(domain: str, link: str) -> dict:
         )
         
         try:
-            with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+            with urllib.request.urlopen(req, timeout=10) as response:
                 if response.status in [200, 201, 202, 204]:
                     return {"success": True, "message": "Unsubscribed successfully", "domain": domain}
         except Exception:
@@ -277,7 +319,7 @@ def unsubscribe_single(domain: str, link: str) -> dict:
             headers={'User-Agent': 'Mozilla/5.0 (compatible; GmailUnsubscribe/1.0)'}
         )
         
-        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             if response.status in [200, 201, 202, 204, 301, 302]:
                 return {"success": True, "message": "Unsubscribed (confirmation may be needed)", "domain": domain}
         
