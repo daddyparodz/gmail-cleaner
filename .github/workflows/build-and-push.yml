@@ -38,6 +38,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
 
+      # Set up QEMU for multi-platform builds
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       # set up Docker build action
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
@@ -68,6 +72,7 @@ jobs:
           file: "./Dockerfile"
           platforms: |
             linux/amd64
+            linux/arm64
           # Note: tags have to be all lower-case
           tags: ${{ steps.meta_main.outputs.tags }}
           labels: ${{ steps.meta_main.outputs.labels }}
