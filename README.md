@@ -45,20 +45,16 @@ Lets make this tool a better one by improving as much as possible, All features 
 
 ## Prerequisites
 
-| Method | Requirements |
-|--------|--------------|
-| **Docker** | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
-| **Local (Python)** | [Python 3.9+](https://www.python.org/downloads/) and [uv](https://docs.astral.sh/uv/getting-started/installation/) |
+- **Docker**: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Local (Python)**: [Python 3.9+](https://www.python.org/downloads/) and [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Setup
 
-> **Important**: You must create your **OWN** Google Cloud credentials.  
-> This app doesn't include pre-configured OAuth - that's what makes it privacy-focused!  
-> Each user runs their own instance with their own credentials.
+**Important**: You must create your **OWN** Google Cloud credentials. This app doesn't include pre-configured OAuth - that's what makes it privacy-focused! Each user runs their own instance with their own credentials.
 
 ### 1. Get Google OAuth Credentials
 
-> **Video Tutorial**: [Watch on YouTube](https://youtu.be/CmOWn8Tm5ZE) for a visual walkthrough
+**Video Tutorial**: [Watch on YouTube](https://youtu.be/CmOWn8Tm5ZE) for a visual walkthrough
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project (or select existing)
