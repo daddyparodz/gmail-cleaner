@@ -22,12 +22,35 @@ A **free**, privacy-focused tool to bulk unsubscribe from emails, delete emails 
 | **Super Fast** | Gmail API with batch requests (100 emails per API call) |
 | **Gmail-style UI** | Clean, familiar interface |
 
+## Platform Support
+
+Works on **all major platforms** - both Docker and local installation:
+
+| Platform | Docker | Local (Python) |
+|----------|--------|----------------|
+| Linux (x86_64) | Native | Native |
+| Windows (x86_64) | Native | Native |
+| macOS Intel | Native | Native |
+| macOS Apple Silicon (M1/M2/M3/M4) | Native | Native |
+
+> The Docker image is multi-architecture (AMD64 + ARM64), so it runs natively on all platforms including Apple Silicon Macs.
+
+## Prerequisites
+
+| Method | Requirements |
+|--------|--------------|
+| **Docker** | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
+| **Local (Python)** | [Python 3.9+](https://www.python.org/downloads/) and [uv](https://docs.astral.sh/uv/getting-started/installation/) |
+
 ## Demo
 
 ![Gmail Cleaner Demo](demo.gif)
 
 **[Watch Setup Video on YouTube](https://youtu.be/CmOWn8Tm5ZE)** - Step-by-step guide to create OAuth credentials
 
+## Feature Requests
+
+To request a feature, [open a GitHub issue](https://github.com/Gururagavendra/gmail-cleaner/issues/new).
 
 ## Setup
 
@@ -173,12 +196,6 @@ If you see `OAuth error: (mismatching_state) CSRF Warning`:
 
 4. Copy the OAuth URL from logs and paste in browser
 
-**Windows Docker users:** If OAuth keeps failing, try running without Docker:
-```bash
-pip install uv && uv sync
-uv run python main.py
-```
-
 ### "Google hasn't verified this app" warning
 
 This is normal for personal OAuth apps! Click:
@@ -196,11 +213,6 @@ PRs welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
 - Improve the UI
 - Add new functionality
 
-## License
-
-MIT License - Use it however you want!
-
----
 
 <p align="center">
   Made to help you escape email hell
