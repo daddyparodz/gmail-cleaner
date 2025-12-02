@@ -165,16 +165,15 @@ class TestDeleteEmailsEndpoint:
 class TestDeleteBulkEndpoint:
     """Tests for POST /api/delete-emails-bulk endpoint."""
 
-    @patch('app.api.actions.delete_emails_bulk')
+    @patch('app.api.actions.delete_emails_bulk_background')
     def test_delete_bulk_with_valid_senders(self, mock_delete, client):
-        """POST /api/delete-emails-bulk with valid senders should work."""
-        mock_delete.return_value = {"success": True, "deleted": 25}
+        """POST /api/delete-emails-bulk with valid senders should start background task."""
         senders = ["sender1@example.com", "sender2@example.com"]
         response = client.post("/api/delete-emails-bulk", json={
             "senders": senders
         })
         assert response.status_code == 200
-        mock_delete.assert_called_once_with(senders)
+        assert response.json() == {"status": "started"}
 
     def test_delete_bulk_exceeds_max_senders(self, client):
         """POST /api/delete-emails-bulk with >50 senders should fail."""
@@ -184,14 +183,14 @@ class TestDeleteBulkEndpoint:
         })
         assert response.status_code == 422  # Validation error
 
-    @patch('app.api.actions.delete_emails_bulk')
+    @patch('app.api.actions.delete_emails_bulk_background')
     def test_delete_bulk_with_empty_list(self, mock_delete, client):
-        """POST /api/delete-emails-bulk with empty list should work."""
-        mock_delete.return_value = {"success": True, "deleted": 0}
+        """POST /api/delete-emails-bulk with empty list should start background task."""
         response = client.post("/api/delete-emails-bulk", json={
             "senders": []
         })
         assert response.status_code == 200
+        assert response.json() == {"status": "started"}
 
 
 class TestRequestValidation:
