@@ -63,6 +63,13 @@ GmailCleaner.Auth = {
             const statusResp = await fetch('/api/web-auth-status');
             const status = await statusResp.json();
             
+            // Check if credentials exist
+            if (!status.has_credentials) {
+                this.resetSignInButton();
+                alert('credentials.json not found!\n\nSetup instructions:\n1. Go to https://console.cloud.google.com/\n2. Create project → Enable Gmail API\n3. Create OAuth credentials (Desktop app)\n4. Download JSON → rename to credentials.json\n5. Put credentials.json in the app folder\n6. Restart the app');
+                return;
+            }
+            
             if (status.web_auth_mode) {
                 const msg = `Docker detected! To sign in:
 
@@ -77,7 +84,15 @@ GmailCleaner.Auth = {
                 alert(msg);
             }
             
-            fetch('/api/sign-in', { method: 'POST' });
+            const signInResp = await fetch('/api/sign-in', { method: 'POST' });
+            const signInResult = await signInResp.json();
+            
+            if (signInResult.error) {
+                this.resetSignInButton();
+                alert('Sign-in error: ' + signInResult.error);
+                return;
+            }
+            
             this.pollStatus();
         } catch (error) {
             alert('Error signing in: ' + error.message);
