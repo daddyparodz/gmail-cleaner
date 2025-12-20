@@ -1241,10 +1241,15 @@ def archive_emails_background(senders: list[str]):
     state.archive_status["total_senders"] = len(senders)
     state.archive_status["message"] = "Starting archive..."
     
+    if not senders:
+        state.archive_status["done"] = True
+        state.archive_status["error"] = "No senders specified"
+        return
+    
     try:
-        service = get_gmail_service()
-        if not service:
-            state.archive_status["error"] = "Not authenticated"
+        service, error = get_gmail_service()
+        if error:
+            state.archive_status["error"] = error
             state.archive_status["done"] = True
             return
         
@@ -1319,10 +1324,15 @@ def mark_important_background(senders: list[str], important: bool = True):
     action = "Marking" if important else "Unmarking"
     state.important_status["message"] = f"{action} as important..."
     
+    if not senders:
+        state.important_status["done"] = True
+        state.important_status["error"] = "No senders specified"
+        return
+    
     try:
-        service = get_gmail_service()
-        if not service:
-            state.important_status["error"] = "Not authenticated"
+        service, error = get_gmail_service()
+        if error:
+            state.important_status["error"] = error
             state.important_status["done"] = True
             return
         
