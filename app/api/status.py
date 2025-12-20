@@ -85,18 +85,21 @@ async def api_download_status():
 async def api_download_csv():
     """Get the generated CSV file."""
     from fastapi.responses import Response
-    
+
     csv_data = get_download_csv()
     if not csv_data:
         return {"error": "No CSV data available"}
-    
-    from datetime import datetime
-    filename = f"emails-backup-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}.csv"
-    
+
+    from datetime import datetime, timezone
+
+    filename = (
+        f"emails-backup-{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H%M%S')}.csv"
+    )
+
     return Response(
         content=csv_data,
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -107,6 +110,7 @@ async def api_delete_bulk_status():
 
 
 # ----- Label Management Endpoints -----
+
 
 @router.get("/labels")
 async def api_get_labels():

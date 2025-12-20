@@ -72,12 +72,12 @@ Lets make this tool a better one by improving as much as possible, All features 
    - Click **Add Users** → Add your Gmail address → **Save**
 7. Go to **Clients** (left sidebar) → **Create Client**
    - Choose the application type based on your setup:
-   
+
    | Setup | Application Type | Redirect URI |
    |-------|------------------|--------------|
    | **Local/Desktop** (Python with browser) | Desktop app | Not needed |
    | **Docker/Remote Server** | Web application | `http://YOUR_HOST:8767/` |
-   
+
    - Name: "Gmail Cleanup" (or anything)
    - Click **Create**
    - Click **Download** (downloads JSON file)
@@ -233,7 +233,7 @@ If you're accessing the app via a **custom domain** (e.g., `gmail.example.com`) 
 
    > **⚠️ Common mistake**: Use only the hostname (e.g., `gmail.example.com`), NOT the full URL (e.g., ~~`https://gmail.example.com`~~)
 
-3. **For HTTPS with reverse proxy**: 
+3. **For HTTPS with reverse proxy**:
    - The OAuth callback still uses HTTP on port 8767 internally
    - Your reverse proxy should forward port 8767 for the OAuth callback
    - The **Authorized redirect URI** in Google Cloud must be `http://YOUR_DOMAIN:8767/` (HTTP, not HTTPS)

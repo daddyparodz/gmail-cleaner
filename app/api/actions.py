@@ -4,6 +4,7 @@ Actions API Routes
 POST endpoints for triggering operations.
 """
 
+from functools import partial
 from fastapi import APIRouter, BackgroundTasks
 
 from app.models import (
@@ -28,7 +29,6 @@ from app.services import (
     mark_emails_as_read,
     scan_senders_for_delete,
     delete_emails_by_sender,
-    delete_emails_bulk,
     delete_emails_bulk_background,
     download_emails_background,
     create_label,
@@ -76,7 +76,9 @@ async def api_mark_read(request: MarkReadRequest, background_tasks: BackgroundTa
 
 
 @router.post("/delete-scan")
-async def api_delete_scan(request: DeleteScanRequest, background_tasks: BackgroundTasks):
+async def api_delete_scan(
+    request: DeleteScanRequest, background_tasks: BackgroundTasks
+):
     """Scan senders for bulk delete."""
     background_tasks.add_task(scan_senders_for_delete, request.limit, request.filters)
     return {"status": "started"}
@@ -89,20 +91,25 @@ async def api_delete_emails(request: DeleteEmailsRequest):
 
 
 @router.post("/delete-emails-bulk")
-async def api_delete_emails_bulk(request: DeleteBulkRequest, background_tasks: BackgroundTasks):
+async def api_delete_emails_bulk(
+    request: DeleteBulkRequest, background_tasks: BackgroundTasks
+):
     """Delete emails from multiple senders (background task with progress)."""
     background_tasks.add_task(delete_emails_bulk_background, request.senders)
     return {"status": "started"}
 
 
 @router.post("/download-emails")
-async def api_download_emails(request: DownloadEmailsRequest, background_tasks: BackgroundTasks):
+async def api_download_emails(
+    request: DownloadEmailsRequest, background_tasks: BackgroundTasks
+):
     """Start downloading email metadata for selected senders."""
     background_tasks.add_task(download_emails_background, request.senders)
     return {"status": "started"}
 
 
 # ----- Label Management Endpoints -----
+
 
 @router.post("/labels")
 async def api_create_label(request: CreateLabelRequest):
@@ -117,16 +124,24 @@ async def api_delete_label(label_id: str):
 
 
 @router.post("/apply-label")
-async def api_apply_label(request: ApplyLabelRequest, background_tasks: BackgroundTasks):
+async def api_apply_label(
+    request: ApplyLabelRequest, background_tasks: BackgroundTasks
+):
     """Apply a label to emails from selected senders."""
-    background_tasks.add_task(apply_label_to_senders_background, request.label_id, request.senders)
+    background_tasks.add_task(
+        apply_label_to_senders_background, request.label_id, request.senders
+    )
     return {"status": "started"}
 
 
 @router.post("/remove-label")
-async def api_remove_label(request: RemoveLabelRequest, background_tasks: BackgroundTasks):
+async def api_remove_label(
+    request: RemoveLabelRequest, background_tasks: BackgroundTasks
+):
     """Remove a label from emails from selected senders."""
-    background_tasks.add_task(remove_label_from_senders_background, request.label_id, request.senders)
+    background_tasks.add_task(
+        remove_label_from_senders_background, request.label_id, request.senders
+    )
     return {"status": "started"}
 
 
@@ -138,7 +153,11 @@ async def api_archive(request: ArchiveRequest, background_tasks: BackgroundTasks
 
 
 @router.post("/mark-important")
-async def api_mark_important(request: MarkImportantRequest, background_tasks: BackgroundTasks):
+async def api_mark_important(
+    request: MarkImportantRequest, background_tasks: BackgroundTasks
+):
     """Mark/unmark emails from selected senders as important."""
-    background_tasks.add_task(mark_important_background, request.senders, request.important)
+    background_tasks.add_task(
+        partial(mark_important_background, request.senders, important=request.important)
+    )
     return {"status": "started"}

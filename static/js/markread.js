@@ -8,11 +8,11 @@ GmailCleaner.MarkRead = {
     async refreshUnreadCount() {
         const countEl = document.querySelector('#unreadCount .count-number');
         countEl.textContent = '...';
-        
+
         try {
             const response = await fetch('/api/unread-count');
             const data = await response.json();
-            
+
             if (data.error) {
                 countEl.textContent = 'Error';
             } else {
@@ -27,7 +27,7 @@ GmailCleaner.MarkRead = {
         const btn = document.getElementById('markReadBtn');
         const progressCard = document.getElementById('markReadProgressCard');
         const countSelect = document.getElementById('markReadCount');
-        
+
         let count = countSelect.value;
         if (count === 'all') {
             // Get actual unread count from the displayed value
@@ -37,9 +37,9 @@ GmailCleaner.MarkRead = {
         } else {
             count = parseInt(count);
         }
-        
+
         const filters = GmailCleaner.Filters.get();
-        
+
         btn.disabled = true;
         btn.innerHTML = `
             <svg class="spinner" viewBox="0 0 24 24" width="18" height="18">
@@ -48,12 +48,12 @@ GmailCleaner.MarkRead = {
             Working...
         `;
         progressCard.classList.remove('hidden');
-        
+
         try {
             await fetch('/api/mark-read', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     count,
                     filters: filters
                 })
@@ -69,13 +69,13 @@ GmailCleaner.MarkRead = {
         try {
             const response = await fetch('/api/mark-read-status');
             const status = await response.json();
-            
+
             const progressBar = document.getElementById('markReadProgressBar');
             const progressText = document.getElementById('markReadProgressText');
-            
+
             progressBar.style.width = status.progress + '%';
             progressText.textContent = status.message;
-            
+
             if (status.done) {
                 this.resetButton();
                 if (!status.error) {

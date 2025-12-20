@@ -23,17 +23,17 @@ GmailCleaner.Scanner = {
                 return null;
             }
         };
-        
+
         const first = formatDate(firstDate);
         const last = formatDate(lastDate);
-        
+
         if (!first || !last) return '';
         if (first === last) return first;
-        
+
         // Compare dates to determine order (oldest to newest)
         const firstDateObj = new Date(firstDate);
         const lastDateObj = new Date(lastDate);
-        
+
         if (firstDateObj <= lastDateObj) {
             return `${first} to ${last}`;
         } else {
@@ -43,21 +43,21 @@ GmailCleaner.Scanner = {
 
     async startScan() {
         if (GmailCleaner.scanning) return;
-        
+
         const authResponse = await fetch('/api/auth-status');
         const authStatus = await authResponse.json();
-        
+
         if (!authStatus.logged_in) {
             GmailCleaner.Auth.signIn();
             return;
         }
-        
+
         GmailCleaner.scanning = true;
         GmailCleaner.UI.showView('unsubscribe');
-        
+
         const scanBtn = document.getElementById('scanBtn');
         const progressCard = document.getElementById('progressCard');
-        
+
         scanBtn.disabled = true;
         scanBtn.innerHTML = `
             <svg class="spinner" viewBox="0 0 24 24" width="18" height="18">
@@ -66,15 +66,15 @@ GmailCleaner.Scanner = {
             Scanning...
         `;
         progressCard.classList.remove('hidden');
-        
+
         const limit = document.getElementById('emailLimit').value;
         const filters = GmailCleaner.Filters.get();
-        
+
         try {
             await fetch('/api/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     limit: parseInt(limit),
                     filters: filters
                 })
@@ -90,24 +90,24 @@ GmailCleaner.Scanner = {
         try {
             const response = await fetch('/api/status');
             const status = await response.json();
-            
+
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             const storageUsed = document.getElementById('storageUsed');
             const storageText = document.getElementById('storageText');
-            
+
             progressBar.style.width = status.progress + '%';
             progressText.textContent = status.message;
             storageUsed.style.width = status.progress + '%';
             storageText.textContent = status.message;
-            
+
             if (status.done) {
                 if (!status.error) {
                     const resultsResponse = await fetch('/api/results');
                     GmailCleaner.results = await resultsResponse.json();
                     this.displayResults();
                     this.updateResultsBadge();
-                    
+
                     if (GmailCleaner.results.length > 0) {
                         setTimeout(() => GmailCleaner.UI.showView('unsubscribe'), 500);
                     }
@@ -145,25 +145,25 @@ GmailCleaner.Scanner = {
         const resultsList = document.getElementById('resultsList');
         const resultsSection = document.getElementById('resultsSection');
         const noResults = document.getElementById('noResults');
-        
+
         resultsList.innerHTML = '';
-        
+
         if (GmailCleaner.results.length === 0) {
             resultsSection.classList.add('hidden');
             noResults.classList.remove('hidden');
             return;
         }
-        
+
         resultsSection.classList.remove('hidden');
         noResults.classList.add('hidden');
-        
+
         GmailCleaner.results.forEach((r, i) => {
             const item = document.createElement('div');
             item.className = 'result-item';
-            
+
             let actionButton;
             let typeLabel;
-            
+
             if (r.type === 'one-click') {
                 actionButton = `<button class="unsub-btn one-click" id="unsub-${i}" onclick="GmailCleaner.Scanner.autoUnsubscribe(${i})">✓ Unsubscribe</button>`;
                 typeLabel = `<span class="type-badge type-auto">Auto</span>`;
@@ -171,7 +171,7 @@ GmailCleaner.Scanner = {
                 actionButton = `<button class="unsub-btn manual" id="unsub-${i}" onclick="GmailCleaner.Scanner.openLink(${i})">Open Link →</button>`;
                 typeLabel = `<span class="type-badge type-manual">Manual</span>`;
             }
-            
+
             item.innerHTML = `
                 <label class="checkbox-wrapper result-checkbox">
                     <input type="checkbox" class="result-cb" data-index="${i}" data-type="${r.type || 'manual'}">
@@ -196,10 +196,10 @@ GmailCleaner.Scanner = {
     async autoUnsubscribe(index) {
         const r = GmailCleaner.results[index];
         const btn = document.getElementById('unsub-' + index);
-        
+
         btn.disabled = true;
         btn.textContent = 'Working...';
-        
+
         try {
             const response = await fetch('/api/unsubscribe', {
                 method: 'POST',
@@ -207,7 +207,7 @@ GmailCleaner.Scanner = {
                 body: JSON.stringify({ domain: r.domain, link: r.link })
             });
             const result = await response.json();
-            
+
             if (result.success) {
                 btn.textContent = '✓ Done!';
                 btn.classList.remove('one-click');
@@ -230,7 +230,7 @@ GmailCleaner.Scanner = {
     openLink(index) {
         const r = GmailCleaner.results[index];
         const btn = document.getElementById('unsub-' + index);
-        
+
         window.open(r.link, '_blank');
         btn.textContent = 'Opened ↗';
         btn.classList.add('success');
@@ -254,25 +254,25 @@ GmailCleaner.Scanner = {
                 selected.push({ index, type });
             }
         });
-        
+
         if (selected.length === 0) {
             alert('No items selected!');
             return;
         }
-        
+
         const oneClick = selected.filter(s => s.type === 'one-click').length;
         const manual = selected.filter(s => s.type !== 'one-click').length;
-        
+
         let message = `Selected ${selected.length} senders:\n`;
         if (oneClick > 0) message += `• ${oneClick} will auto-unsubscribe\n`;
         if (manual > 0) message += `• ${manual} will open in new tabs\n`;
         message += `\nContinue?`;
-        
+
         if (!confirm(message)) return;
-        
+
         let autoSuccess = 0;
         let manualOpened = 0;
-        
+
         for (const { index, type } of selected) {
             if (type === 'one-click') {
                 await this.autoUnsubscribe(index);
@@ -281,7 +281,7 @@ GmailCleaner.Scanner = {
                 await new Promise(r => setTimeout(r, 200));
             }
         }
-        
+
         for (const { index, type } of selected) {
             if (type !== 'one-click') {
                 this.openLink(index);
@@ -289,7 +289,7 @@ GmailCleaner.Scanner = {
                 await new Promise(r => setTimeout(r, 400));
             }
         }
-        
+
         // Show toast notification
         let toastMessage = '';
         if (autoSuccess > 0 && manualOpened > 0) {
@@ -301,7 +301,7 @@ GmailCleaner.Scanner = {
             GmailCleaner.UI.showInfoToast(toastMessage);
             return;
         }
-        
+
         if (toastMessage) {
             GmailCleaner.UI.showSuccessToast(toastMessage);
         }
@@ -312,14 +312,14 @@ GmailCleaner.Scanner = {
             alert('No results to export');
             return;
         }
-        
+
         let text = 'Gmail Unsubscribe Links\n' + '='.repeat(50) + '\n\n';
         GmailCleaner.results.forEach((r, i) => {
             text += `${i + 1}. ${r.domain}\n`;
             text += `   Emails: ${r.count}\n`;
             text += `   Link: ${r.link}\n\n`;
         });
-        
+
         const blob = new Blob([text], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
