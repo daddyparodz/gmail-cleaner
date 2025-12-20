@@ -10,6 +10,7 @@ import platform
 import shutil
 import threading
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -64,10 +65,15 @@ def _get_credentials_path() -> str | None:
 
     # Check for env var (for cloud deployment)
     env_creds = os.environ.get("GOOGLE_CREDENTIALS")
-    if env_creds:
-        with open(settings.credentials_file, "w") as f:
-            f.write(env_creds)
-        return settings.credentials_file
+    if env_creds:  # Check if key exists and is not empty
+        try:
+            with open(settings.credentials_file, "w") as f:
+                f.write(env_creds)
+            return settings.credentials_file
+        except (IOError, OSError) as e:
+            logger.error(f"Failed to write credentials file: {e}", exc_info=True)
+            # Don't create invalid file - return None
+            return None
 
     return None
 
@@ -81,18 +87,46 @@ def get_gmail_service():
     creds = None
 
     if os.path.exists(settings.token_file):
-        creds = Credentials.from_authorized_user_file(
-            settings.token_file, settings.scopes
-        )
+        try:
+            creds = Credentials.from_authorized_user_file(
+                settings.token_file, settings.scopes
+            )
+        except (ValueError, OSError, IOError) as e:
+            # Token file is corrupted or invalid
+            logger.warning(f"Failed to load credentials from token file: {e}")
+            # Delete corrupted token file
+            try:
+                os.remove(settings.token_file)
+            except OSError:
+                pass
+            creds = None
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            with open(settings.token_file, "w") as token:
-                token.write(creds.to_json())
-        else:
-            # Prevent multiple OAuth attempts
-            if _auth_in_progress["active"]:
+            try:
+                creds.refresh(Request())
+                with open(settings.token_file, "w") as token:
+                    token.write(creds.to_json())
+                # After refresh, creds should be valid - skip OAuth and continue to build service
+            except RefreshError as e:
+                # Refresh token is invalid or expired
+                logger.warning(f"Token refresh failed: {e}")
+                # Clear invalid token file
+                try:
+                    os.remove(settings.token_file)
+                except OSError:
+                    pass
+                creds = None  # Force OAuth flow
+            except (IOError, OSError) as e:
+                # Token file write failed
+                logger.error(f"Failed to save refreshed token: {e}", exc_info=True)
+                # Don't set creds to None - retry might work, but log the error
+
+        # If creds is still None or invalid after refresh attempt, trigger OAuth
+        if not creds or not creds.valid:
+            # Prevent multiple OAuth attempts (thread-safe check)
+            # Note: Small race condition window, but acceptable for this use case
+            if _auth_in_progress.get("active", False):
                 return (
                     None,
                     "Sign-in already in progress. Please complete the authorization in your browser.",
@@ -137,12 +171,18 @@ def get_gmail_service():
                         bind_addr=bind_address,
                         host=settings.oauth_host,
                         open_browser=open_browser,
-                        prompt='consent' 
+                        prompt="consent",
                     )
 
-                    with open(settings.token_file, "w") as token:
-                        token.write(new_creds.to_json())
-                    print("OAuth complete! Token saved.")
+                    # Save token with error handling
+                    try:
+                        with open(settings.token_file, "w") as token:
+                            token.write(new_creds.to_json())
+                        print("OAuth complete! Token saved.")
+                    except (IOError, OSError) as e:
+                        logger.error(f"Failed to save token file: {e}", exc_info=True)
+                        print(f"OAuth completed but failed to save token: {e}")
+                        raise  # Re-raise so outer exception handler can log it
                 except Exception as e:
                     print(f"OAuth error: {e}")
                 finally:
@@ -157,7 +197,16 @@ def get_gmail_service():
                 "Sign-in started. Please complete authorization in your browser.",
             )
 
-    service = build("gmail", "v1", credentials=creds)
+    # Build Gmail service - handle potential errors
+    try:
+        service = build("gmail", "v1", credentials=creds)
+    except Exception as e:
+        logger.error(f"Failed to build Gmail service: {e}", exc_info=True)
+        # Return error instead of crashing
+        return (
+            None,
+            f"Failed to connect to Gmail API: {str(e)}. Please try signing in again.",
+        )
 
     try:
         profile = service.users().getProfile(userId="me").execute()
@@ -203,17 +252,30 @@ def check_login_status() -> dict:
                 state.current_user["logged_in"] = True
                 return state.current_user.copy()
             elif creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-                with open(settings.token_file, "w") as token:
-                    token.write(creds.to_json())
-                service = build("gmail", "v1", credentials=creds)
-                profile = service.users().getProfile(userId="me").execute()
-                state.current_user["email"] = profile.get("emailAddress", "Unknown")
-                state.current_user["logged_in"] = True
-                return state.current_user.copy()
+                try:
+                    creds.refresh(Request())
+                    with open(settings.token_file, "w") as token:
+                        token.write(creds.to_json())
+                    service = build("gmail", "v1", credentials=creds)
+                    profile = service.users().getProfile(userId="me").execute()
+                    state.current_user["email"] = profile.get("emailAddress", "Unknown")
+                    state.current_user["logged_in"] = True
+                    return state.current_user.copy()
+                except RefreshError as e:
+                    # Refresh token is invalid or expired - clear token
+                    logger.warning(f"Token refresh failed: {e}")
+                    try:
+                        os.remove(settings.token_file)
+                    except OSError:
+                        pass
         except (ValueError, OSError, IOError) as e:
             # Token file is invalid/corrupted
             logger.warning(f"Failed to load or refresh credentials: {e}")
+            # Clear corrupted token file
+            try:
+                os.remove(settings.token_file)
+            except OSError:
+                pass
         except Exception as e:
             # API errors, network issues, etc.
             logger.error(f"Error checking login status: {e}", exc_info=True)

@@ -47,7 +47,10 @@ logger = logging.getLogger(__name__)
 @router.post("/scan")
 async def api_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     """Start email scan for unsubscribe links."""
-    background_tasks.add_task(scan_emails, request.limit, request.filters)
+    filters_dict = (
+        request.filters.model_dump(exclude_none=True) if request.filters else None
+    )
+    background_tasks.add_task(scan_emails, request.limit, filters_dict)
     return {"status": "started"}
 
 
@@ -87,7 +90,10 @@ async def api_unsubscribe(request: UnsubscribeRequest):
 @router.post("/mark-read")
 async def api_mark_read(request: MarkReadRequest, background_tasks: BackgroundTasks):
     """Mark emails as read."""
-    background_tasks.add_task(mark_emails_as_read, request.count, request.filters)
+    filters_dict = (
+        request.filters.model_dump(exclude_none=True) if request.filters else None
+    )
+    background_tasks.add_task(mark_emails_as_read, request.count, filters_dict)
     return {"status": "started"}
 
 
@@ -96,7 +102,10 @@ async def api_delete_scan(
     request: DeleteScanRequest, background_tasks: BackgroundTasks
 ):
     """Scan senders for bulk delete."""
-    background_tasks.add_task(scan_senders_for_delete, request.limit, request.filters)
+    filters_dict = (
+        request.filters.model_dump(exclude_none=True) if request.filters else None
+    )
+    background_tasks.add_task(scan_senders_for_delete, request.limit, filters_dict)
     return {"status": "started"}
 
 
