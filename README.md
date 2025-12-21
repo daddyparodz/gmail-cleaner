@@ -47,6 +47,16 @@ Works on **all major platforms** - both Docker and local installation:
 - **Your Credentials** - You control your own Google OAuth app
 - **Gitignored Secrets** - `credentials.json` and `token.json` never get committed
 
+## 🆘 Need Help Setting Up?
+Struggling with Docker, Google Cloud Console, or `credentials.json`? I can help you set it up personally!<br>
+I offer a **1-on-1 Setup Service ($8)** where we hop on a Google Meet, you share your screen, and I guide you through the entire installation until it's working perfectly.
+
+- **Secure:** I guide you; I never see your passwords.
+- **Fast:** We'll get it running in under 20 minutes.
+- **Support the Project:** Your $8 helps keep this tool free and open source.
+
+Book a Setup Session Here - mail me at guruvelu85@gmail.com, i will reply and setup an gmeet call
+
 ## Demo
 
 ![Gmail Cleaner Demo](media/demo.gif)
