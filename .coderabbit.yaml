@@ -33,3 +33,7 @@ reviews:
 
 chat:
   auto_reply: true             # Allows you to reply to CodeRabbit comments and have it answer back
+
+issue_enrichment:
+  auto_enrich:
+    enabled: false
