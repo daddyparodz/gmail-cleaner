@@ -23,12 +23,69 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+    html, body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .app-container,
+    .main-wrapper,
+    .main-content,
+    .header,
+    .filter-bar,
+    .main-content-inner {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
     .header {
-        padding: 12px 16px;
+        padding: 10px 12px;
+        height: auto;
+        gap: 8px;
+    }
+
+    .header-left {
+        gap: 6px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .header-right {
+        min-width: 0;
+        flex: 0 1 auto;
+    }
+
+    .menu-btn {
+        width: 40px;
+        height: 40px;
     }
 
     .header h1 {
         font-size: 18px;
+    }
+
+    .logo {
+        min-width: 0;
+    }
+
+    .logo-text {
+        font-size: 18px;
+    }
+
+    .user-section {
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .user-email {
+        display: none;
+    }
+
+    .header .btn-sm {
+        padding: 6px 10px;
+        font-size: 12px;
     }
 
     .sidebar {
@@ -39,7 +96,8 @@
         transition: left 0.3s ease;
     }
 
-    .sidebar.active {
+    .sidebar.active,
+    .sidebar.open {
         left: 0;
     }
 
@@ -56,6 +114,11 @@
     .main-content {
         margin-left: 0;
         padding: 16px;
+    }
+
+    .main-content-inner {
+        padding: 16px;
+        max-width: 100%;
     }
 
     /* Mobile menu overlay */
@@ -82,15 +145,36 @@
     /* Filter bar mobile */
     .filter-bar {
         flex-wrap: wrap;
-        padding: 12px;
+        padding: 12px 16px;
+    }
+
+    .filter-bar-content {
+        gap: 12px;
     }
 
     .filter-group {
         width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
 
     .filter-select {
         width: 100%;
+        min-width: 0;
+    }
+
+    .filter-input,
+    .date-range-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .filter-clear-btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        padding: 10px 12px;
     }
 
     .filter-actions {
@@ -101,6 +185,21 @@
     /* Cards */
     .card-body {
         padding: 16px;
+    }
+
+    .scan-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .scan-row .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-select {
+        max-width: none;
     }
 
     /* Results */
@@ -120,6 +219,7 @@
         width: 100%;
         margin-left: 0;
         margin-top: 8px;
+        flex-wrap: wrap;
     }
 
     /* Toolbar */
@@ -130,6 +230,30 @@
 
     .toolbar-left, .toolbar-right {
         flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .toolbar-right .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .action-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-group {
+        flex-wrap: wrap;
+    }
+
+    .action-divider {
+        display: none;
+    }
+
+    .btn.btn-action {
+        width: 100%;
+        justify-content: center;
     }
 
     /* Unread info */
@@ -192,6 +316,88 @@
         width: 24px;
         height: 24px;
         font-size: 12px;
+    }
+}
+
+/* Touch devices with wide CSS viewports */
+@media (pointer: coarse) and (min-width: 769px) {
+    .sidebar {
+        position: fixed;
+        left: -250px;
+        z-index: 1000;
+        width: 250px;
+        transition: left 0.3s ease;
+    }
+
+    .sidebar.active,
+    .sidebar.open {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+    }
+
+    .main-content-inner {
+        padding: 16px;
+        max-width: 100%;
+    }
+
+    .filter-bar {
+        padding: 12px 16px;
+    }
+
+    .filter-bar-content {
+        gap: 12px;
+    }
+
+    .filter-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .filter-select,
+    .filter-input,
+    .date-range-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .filter-clear-btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        padding: 10px 12px;
+    }
+
+    .scan-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .scan-row .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .toolbar-right .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
