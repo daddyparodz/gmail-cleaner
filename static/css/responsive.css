@@ -42,6 +42,7 @@
         padding: 10px 12px;
         height: auto;
         gap: 8px;
+        z-index: 200;
     }
 
     .header-left {
@@ -113,10 +114,16 @@
 
     .sidebar {
         position: fixed;
-        left: -250px;
-        z-index: 1000;
-        width: 250px;
-        transition: left 0.3s ease;
+        left: -280px;
+        z-index: 180;
+        width: 280px;
+        height: 100vh;
+        top: 0;
+        padding-top: 64px;
+        border-right: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        transition: left 0.25s ease;
+        overflow-y: auto;
     }
 
     .sidebar.active,
@@ -148,16 +155,23 @@
     .sidebar-overlay {
         display: none;
         position: fixed;
-        top: 60px;
+        top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.3);
-        z-index: 999;
+        background: rgba(32, 33, 36, 0.35);
+        backdrop-filter: blur(2px);
+        z-index: 170;
+        pointer-events: none;
     }
 
     .sidebar-overlay.active {
         display: block;
+        pointer-events: auto;
+    }
+
+    body.sidebar-open {
+        overflow: hidden;
     }
 
     /* Show menu button on mobile */
