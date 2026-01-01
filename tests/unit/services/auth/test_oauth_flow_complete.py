@@ -53,6 +53,7 @@ class ImmediateThread:
             self._target(*self._args, **self._kwargs)
 
     def join(self, timeout=None):
+        _ = timeout
         return None
 
 
