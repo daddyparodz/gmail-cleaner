@@ -10,6 +10,23 @@ from app.core.state import SessionState
 from app.services import auth
 
 
+def exists_side_effect(path):
+    """
+    Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+    
+    Parameters:
+        path (str | os.PathLike): Path or filename to check.
+    
+    Returns:
+        True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+    """
+    if "token.json" in str(path):
+        return False
+    if "credentials.json" in str(path):
+        return True
+    return False
+
+
 class ImmediateThread:
     """Run thread targets immediately in tests."""
 
@@ -92,22 +109,6 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_host = "localhost"
         mock_settings.oauth_external_port = None
 
-        def exists_side_effect(path):
-            """
-            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
-            
-            Parameters:
-                path (str | os.PathLike): Path or filename to check.
-            
-            Returns:
-                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
-            """
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
-
         mock_exists.side_effect = exists_side_effect
         mock_is_file_empty.return_value = False
 
@@ -147,13 +148,6 @@ class TestSuccessfulOAuthFlow:
         mock_settings.scopes = ["scope1", "scope2"]
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
-
-        def exists_side_effect(path):
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
 
         mock_exists.side_effect = exists_side_effect
 
@@ -199,22 +193,6 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_host = "localhost"
         mock_settings.oauth_external_port = None
 
-        def exists_side_effect(path):
-            """
-            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
-            
-            Parameters:
-                path (str | os.PathLike): Path or filename to check.
-            
-            Returns:
-                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
-            """
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
-
         mock_exists.side_effect = exists_side_effect
 
         mock_flow_instance = Mock()
@@ -258,22 +236,6 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "custom.example.com"
         mock_settings.oauth_external_port = None
-
-        def exists_side_effect(path):
-            """
-            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
-            
-            Parameters:
-                path (str | os.PathLike): Path or filename to check.
-            
-            Returns:
-                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
-            """
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
 
         mock_exists.side_effect = exists_side_effect
 
@@ -325,13 +287,6 @@ class TestOAuthFlowErrors:
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
 
-        def exists_side_effect(path):
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
-
         mock_exists.side_effect = exists_side_effect
 
         # Mock Flow to raise error for invalid code
@@ -374,13 +329,6 @@ class TestOAuthFlowErrors:
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
 
-        def exists_side_effect(path):
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
-
         mock_exists.side_effect = exists_side_effect
 
         mock_flow_instance = Mock()
@@ -420,13 +368,6 @@ class TestOAuthFlowErrors:
         mock_settings.scopes = ["scope1", "scope2"]
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
-
-        def exists_side_effect(path):
-            if "token.json" in str(path):
-                return False
-            if "credentials.json" in str(path):
-                return True
-            return False
 
         mock_exists.side_effect = exists_side_effect
 
