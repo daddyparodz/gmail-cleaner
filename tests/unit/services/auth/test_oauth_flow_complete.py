@@ -6,8 +6,51 @@ Tests for successful OAuth flows and edge cases not covered in existing tests.
 
 from unittest.mock import Mock, patch, mock_open
 
-
+from app.core.state import SessionState
 from app.services import auth
+
+
+class ImmediateThread:
+    """Run thread targets immediately in tests."""
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize an ImmediateThread-like object by recording a callable target, its positional and keyword arguments, and a daemon flag.
+        
+        Parameters:
+            *args: Optional positional form (target, args, kwargs) where:
+                - target (callable): the callable to invoke when started.
+                - args (tuple): positional arguments to pass to the target.
+                - kwargs (dict): keyword arguments to pass to the target.
+            **kwargs: Keyword-based initialization keys:
+                - target (callable): callable to invoke (overrides positional target if provided).
+                - args (tuple): positional arguments to pass to the target (defaults to ()).
+                - kwargs (dict): keyword arguments to pass to the target (defaults to {}).
+                - daemon (bool): whether the thread is a daemon (defaults to False).
+        
+        Behavior:
+            - If `target`, `args`, or `kwargs` are provided via keywords, those values are used.
+            - If no keyword `target` is given but positional `*args` are supplied, the constructor derives `target`, `args`, and `kwargs` from the positional values in order.
+        """
+        self._target = kwargs.get("target")
+        self._args = kwargs.get("args", ())
+        self._kwargs = kwargs.get("kwargs", {})
+        self.daemon = kwargs.get("daemon", False)
+        if self._target is None and args:
+            self._target = args[0]
+            if len(args) > 1:
+                self._args = args[1]
+            if len(args) > 2:
+                self._kwargs = args[2]
+
+    def start(self):
+        """
+        Execute the stored target callable immediately in the current thread.
+        
+        If no target was provided, this method does nothing.
+        """
+        if self._target:
+            self._target(*self._args, **self._kwargs)
 
 
 class TestSuccessfulOAuthFlow:
@@ -33,14 +76,28 @@ class TestSuccessfulOAuthFlow:
         mock_is_file_empty,
         mock_settings,
     ):
-        """Complete OAuth flow should save token successfully."""
+        """
+        Verifies that starting the complete OAuth flow when credentials exist and no token is present saves a new token and reports that sign-in has started.
+        
+        Sets up credentials present and token absent, mocks a successful InstalledAppFlow returning credentials with a token, then calls get_gmail_service and asserts that no service is returned immediately, an error message is returned, and the error contains "Sign-in started".
+        """
         mock_settings.credentials_file = "credentials.json"
         mock_settings.token_file = "token.json"
         mock_settings.scopes = ["scope1", "scope2"]
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
+        mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
+            """
+            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+            
+            Parameters:
+                path (str | os.PathLike): Path or filename to check.
+            
+            Returns:
+                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+            """
             if "token.json" in str(path):
                 return False
             if "credentials.json" in str(path):
@@ -98,14 +155,24 @@ class TestSuccessfulOAuthFlow:
 
         mock_flow_instance = Mock()
         mock_flow.from_client_secrets_file.return_value = mock_flow_instance
-        mock_flow_instance.run_local_server.return_value = Mock()
+        mock_flow_instance.authorization_url.return_value = (
+            "http://auth.example.com",
+            "state",
+        )
 
-        service, error = auth.get_gmail_service()
+        with patch(
+            "app.services.auth.HTTPServer", side_effect=OSError("port error")
+        ) as mock_server, patch(
+            "app.services.auth.threading.Thread", new=ImmediateThread
+        ):
+            service, error = auth.get_gmail_service(session=SessionState())
 
         # Verify bind_address is 0.0.0.0 for web auth mode
-        mock_flow_instance.run_local_server.assert_called_once()
-        call_kwargs = mock_flow_instance.run_local_server.call_args[1]
-        assert call_kwargs.get("bind_addr") == "0.0.0.0"
+        assert service is None
+        assert error is not None
+        mock_server.assert_called_once()
+        bind_address = mock_server.call_args[0][0][0]
+        assert bind_address == "0.0.0.0"
 
     @patch("app.services.auth.settings")
     @patch("os.path.exists")
@@ -126,8 +193,19 @@ class TestSuccessfulOAuthFlow:
         mock_settings.scopes = ["scope1", "scope2"]
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
+        mock_settings.oauth_external_port = None
+        mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
+            """
+            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+            
+            Parameters:
+                path (str | os.PathLike): Path or filename to check.
+            
+            Returns:
+                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+            """
             if "token.json" in str(path):
                 return False
             if "credentials.json" in str(path):
@@ -138,14 +216,24 @@ class TestSuccessfulOAuthFlow:
 
         mock_flow_instance = Mock()
         mock_flow.from_client_secrets_file.return_value = mock_flow_instance
-        mock_flow_instance.run_local_server.return_value = Mock()
+        mock_flow_instance.authorization_url.return_value = (
+            "http://auth.example.com",
+            "state",
+        )
 
-        service, error = auth.get_gmail_service()
+        with patch(
+            "app.services.auth.HTTPServer", side_effect=OSError("port error")
+        ) as mock_server, patch(
+            "app.services.auth.threading.Thread", new=ImmediateThread
+        ):
+            service, error = auth.get_gmail_service(session=SessionState())
 
         # Verify bind_address is localhost for desktop mode
-        mock_flow_instance.run_local_server.assert_called_once()
-        call_kwargs = mock_flow_instance.run_local_server.call_args[1]
-        assert call_kwargs.get("bind_addr") == "localhost"
+        assert service is None
+        assert error is not None
+        mock_server.assert_called_once()
+        bind_address = mock_server.call_args[0][0][0]
+        assert bind_address == "localhost"
 
     @patch("app.services.auth.settings")
     @patch("os.path.exists")
@@ -166,8 +254,18 @@ class TestSuccessfulOAuthFlow:
         mock_settings.scopes = ["scope1", "scope2"]
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "custom.example.com"
+        mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
+            """
+            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+            
+            Parameters:
+                path (str | os.PathLike): Path or filename to check.
+            
+            Returns:
+                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+            """
             if "token.json" in str(path):
                 return False
             if "credentials.json" in str(path):
@@ -178,14 +276,20 @@ class TestSuccessfulOAuthFlow:
 
         mock_flow_instance = Mock()
         mock_flow.from_client_secrets_file.return_value = mock_flow_instance
-        mock_flow_instance.run_local_server.return_value = Mock()
+        mock_flow_instance.authorization_url.return_value = (
+            "http://auth.example.com",
+            "state",
+        )
 
-        service, error = auth.get_gmail_service()
+        with patch(
+            "app.services.auth.HTTPServer", side_effect=OSError("port error")
+        ), patch("app.services.auth.threading.Thread", new=ImmediateThread):
+            service, error = auth.get_gmail_service(session=SessionState())
 
         # Verify custom host is used
-        mock_flow_instance.run_local_server.assert_called_once()
-        call_kwargs = mock_flow_instance.run_local_server.call_args[1]
-        assert call_kwargs.get("host") == "custom.example.com"
+        assert service is None
+        assert error is not None
+        assert mock_flow_instance.redirect_uri == "http://custom.example.com:8767/"
 
 
 class TestOAuthFlowErrors:
