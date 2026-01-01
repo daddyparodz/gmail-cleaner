@@ -65,10 +65,8 @@ def _get_request_host_and_scheme(request: Request) -> tuple[str, str]:
     host = forwarded_host or request.url.hostname or "localhost"
     if host and ":" in host and not host.startswith("["):
         host = host.split(":", 1)[0]
-    scheme = forwarded_proto or request.url.scheme or "http"
+    scheme = (forwarded_proto or request.url.scheme or "http").split(",")[0].strip()
     if scheme not in ("http", "https"):
-        scheme = "http"
-    if scheme == "https":
         scheme = "http"
     return host, scheme
 
