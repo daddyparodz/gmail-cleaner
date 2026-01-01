@@ -194,7 +194,6 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_port = 8767
         mock_settings.oauth_host = "localhost"
         mock_settings.oauth_external_port = None
-        mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
             """
