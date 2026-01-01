@@ -52,6 +52,9 @@ class ImmediateThread:
         if self._target:
             self._target(*self._args, **self._kwargs)
 
+    def join(self, timeout=None):
+        return None
+
 
 class TestSuccessfulOAuthFlow:
     """Tests for successful OAuth flow scenarios"""
