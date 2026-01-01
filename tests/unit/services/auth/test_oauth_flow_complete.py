@@ -14,6 +14,24 @@ class ImmediateThread:
     """Run thread targets immediately in tests."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize an ImmediateThread-like object by recording a callable target, its positional and keyword arguments, and a daemon flag.
+        
+        Parameters:
+            *args: Optional positional form (target, args, kwargs) where:
+                - target (callable): the callable to invoke when started.
+                - args (tuple): positional arguments to pass to the target.
+                - kwargs (dict): keyword arguments to pass to the target.
+            **kwargs: Keyword-based initialization keys:
+                - target (callable): callable to invoke (overrides positional target if provided).
+                - args (tuple): positional arguments to pass to the target (defaults to ()).
+                - kwargs (dict): keyword arguments to pass to the target (defaults to {}).
+                - daemon (bool): whether the thread is a daemon (defaults to False).
+        
+        Behavior:
+            - If `target`, `args`, or `kwargs` are provided via keywords, those values are used.
+            - If no keyword `target` is given but positional `*args` are supplied, the constructor derives `target`, `args`, and `kwargs` from the positional values in order.
+        """
         self._target = kwargs.get("target")
         self._args = kwargs.get("args", ())
         self._kwargs = kwargs.get("kwargs", {})
@@ -26,6 +44,11 @@ class ImmediateThread:
                 self._kwargs = args[2]
 
     def start(self):
+        """
+        Execute the stored target callable immediately in the current thread.
+        
+        If no target was provided, this method does nothing.
+        """
         if self._target:
             self._target(*self._args, **self._kwargs)
 
@@ -53,7 +76,11 @@ class TestSuccessfulOAuthFlow:
         mock_is_file_empty,
         mock_settings,
     ):
-        """Complete OAuth flow should save token successfully."""
+        """
+        Verifies that starting the complete OAuth flow when credentials exist and no token is present saves a new token and reports that sign-in has started.
+        
+        Sets up credentials present and token absent, mocks a successful InstalledAppFlow returning credentials with a token, then calls get_gmail_service and asserts that no service is returned immediately, an error message is returned, and the error contains "Sign-in started".
+        """
         mock_settings.credentials_file = "credentials.json"
         mock_settings.token_file = "token.json"
         mock_settings.scopes = ["scope1", "scope2"]
@@ -62,6 +89,15 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
+            """
+            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+            
+            Parameters:
+                path (str | os.PathLike): Path or filename to check.
+            
+            Returns:
+                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+            """
             if "token.json" in str(path):
                 return False
             if "credentials.json" in str(path):
@@ -161,6 +197,15 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
+            """
+            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+            
+            Parameters:
+                path (str | os.PathLike): Path or filename to check.
+            
+            Returns:
+                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+            """
             if "token.json" in str(path):
                 return False
             if "credentials.json" in str(path):
@@ -212,6 +257,15 @@ class TestSuccessfulOAuthFlow:
         mock_settings.oauth_external_port = None
 
         def exists_side_effect(path):
+            """
+            Simulates os.path.exists behavior for tests by indicating presence only for credentials files.
+            
+            Parameters:
+                path (str | os.PathLike): Path or filename to check.
+            
+            Returns:
+                True if `path` contains "credentials.json", False otherwise (including when it contains "token.json").
+            """
             if "token.json" in str(path):
                 return False
             if "credentials.json" in str(path):
