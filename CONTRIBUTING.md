@@ -18,7 +18,7 @@ Thanks for your interest in contributing! 🎉
 ## Development Setup
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.10+ (the application evaluates union annotations at import time)
 - [uv](https://github.com/astral-sh/uv) (recommended) or pip
 - Your own Google Cloud OAuth credentials
 
